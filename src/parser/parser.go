@@ -9,8 +9,7 @@ import (
 
 
 func RESPParser(input string) (string,[]string) {
-	//"*3\r\n$3\r\nget\r\n$4\r\nname\r\n $9\r\nSangharsh\r\n"
-
+	
 	var commandLength = input[1:2]
 	var keyLength string 
 	var arguments []string
