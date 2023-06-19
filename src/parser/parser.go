@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"strconv"
@@ -8,15 +9,18 @@ import (
 )
 
 
-func RESPParser(input string) (string,[]string) {
-	
-	var commandLength = input[1:2]
+func RESPParser(input []byte) (string,[]string) {
+	InputString := string(input)
+	BytesBuffer := bytes.NewBuffer(input)
+	log.Printf("InputString Command: %q", BytesBuffer.Bytes())
+
+	var commandLength = InputString[1:2]
 	var keyLength string 
 	var arguments []string
 	var ans []string
 
 	if commandLength == "3" {
-		keyLength = input[14:15]
+		keyLength = InputString[14:15]
 		var valueLength int
 		var key string
 		var value string
@@ -26,38 +30,43 @@ func RESPParser(input string) (string,[]string) {
 
 		var trimFormat = fmt.Sprintf("*3\r\n$%s\r\nSET\r\n$%s\r\n", commandLength, keyLength)
 
-		input = strings.TrimLeft(input, trimFormat)
-		input = strings.TrimRight(input, "\r\n")
+		InputString = strings.TrimLeft(InputString, trimFormat)
+		InputString = strings.TrimRight(InputString, "\r\n")
 
 
 		keyLength, _ := strconv.Atoi(keyLength)
-		log.Printf("No of Bytes of input %d", len(input))
+		log.Printf("No of Bytes of InputString %d", len(InputString))
 
-		key = input[:keyLength]
+		key = InputString[:keyLength]
 		valueLength = keyLength + 6
-		value = input[valueLength:]
+		value = InputString[valueLength:]
 
 		arguments = append(arguments, key)
 		arguments = append(arguments, value)
 
-		log.Printf("Input is %s", input)
+		log.Printf("InputString is %s", InputString)
 		log.Printf("Key is %s", key)
 		log.Printf("Value is %s", value)
 		return "SET", arguments
 
 	} else if commandLength == "2" {
-		var length = 3
-		var keyLength = input[14:15]
+		keyLength = InputString[14:15]
+//		var valueLength int
+//		var key string
+//		var value string
 
-		var trimFormat = fmt.Sprintf("*2\r\n$%d\r\nGET\r\n$%s", length, keyLength)
-		input = strings.TrimRight(input, "\r\n")
-		input = strings.TrimLeft(input, trimFormat)
+		log.Printf("Command Length is %s\n", commandLength)
+		log.Printf("Key Length is %s\n", keyLength)
 
-		fmt.Printf("Data is %s", (input))
+		var trimFormat = fmt.Sprintf("*2\r\n$3\r\nGET\r\n$%s\r\n", keyLength)
 
-		arguments = append(arguments, input)
 
-		return "GET", arguments
+		InputString = strings.TrimLeft(InputString, trimFormat)
+		InputString = strings.TrimRight(InputString, "\r\n")
+
+		var ans []string
+		ans = append(ans, InputString)
+		return "GET", ans
 	}
 	return "PING", ans
 

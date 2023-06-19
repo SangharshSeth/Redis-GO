@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/sangharshseth/src/parser"
@@ -30,23 +31,31 @@ func handleConnection(connection net.Conn, storage *sync.Map) {
 
 		log.Printf("No of Bytes Read: %d\n", n)
 
-		command, arguments := parser.RESPParser(string(buffer))
+		command, arguments := parser.RESPParser(buffer)
 
-		if command == "PING" {
-			connection.Write([]byte("+PONG\r\n"))
-		} else if command == "SET" {
+		if command == "SET" {
 			storage.Store(arguments[0], arguments[1])
-			log.Printf("Data is Stored in Redis-Storage Successfully.")
 			connection.Write([]byte("+OK\r\n"))
-		} else if command == "GET" {
-			data, err := storage.Load(arguments[0])
-			if !err  {
-				fmt.Printf("Data is not Found in Redis-Storage.")
-				connection.Write([]byte("+Data Not Found in Redis Storage\r\n"))
-			}
-			response := fmt.Sprintf("+%s\r\n",data)
-			connection.Write([]byte(response))
 		}
+		if command == "GET" {
+			val, exists := storage.Load(arguments[0])
+			if !exists {
+				log.Printf("Here %s", val)
+				log.Printf("Value not Found for Key %s", arguments[0])
+				connection.Write([]byte("+No Key\r\n"))
+			} else {
+				log.Printf("Value for Key %s is %s", arguments[0], val)
+				result := fmt.Sprintf("+%s\r\n", val)
+				resultInterMediate := strings.TrimLeft(result, "+\n")
+				result = fmt.Sprintf("+%s", resultInterMediate)
+				log.Print(len(result))
+				log.Print([]byte(result))
+				connection.Write([]byte(result))
+			}
+		}
+		fmt.Printf("Command %s", command)
+		fmt.Print(arguments[0])
+		connection.Write([]byte("+OK\r\n"))
 	}
 
 }
