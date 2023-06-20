@@ -3,13 +3,13 @@ package main
 import (
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"os"
 	"strings"
 	"sync"
 
-	"github.com/sangharshseth/src/parser"
+	"github.com/pieterclaerhout/go-log"
+	"github.com/sangharshseth/parser"
 )
 
 func handleConnection(connection net.Conn, storage *sync.Map) {
@@ -17,14 +17,14 @@ func handleConnection(connection net.Conn, storage *sync.Map) {
 	defer connection.Close()
 	var buffer = make([]byte, 128)
 	for {
-		n, err := connection.Read(buffer)
+		n, err := connection.Read(buffer)	
 		buffer = buffer[:n]
 		if err != nil {
 			if err == io.EOF {
-				log.Println("Connection closed by client")
+				log.Error("Connection closed by client")
 				break
 			}
-			log.Printf("Error while reading data: %s", err.Error())
+			log.Debugf("Error while reading data: %s", err.Error())
 			return
 		}
 
@@ -58,6 +58,12 @@ func ExpiryService(datastore *sync.Map) {
 }
 
 func main() {
+
+	//Initialize Loggers
+	log.DebugMode = true
+	log.PrintTimestamp = true
+	log.PrintColors = true
+
 	port := "6379"
 	var storageEngine sync.Map
 	var redisServerURL = fmt.Sprintf("127.0.0.1:%s", port)
@@ -75,10 +81,10 @@ func main() {
 	for {
 		conn, err := l.Accept()
 		if err != nil {
-			fmt.Println("Error accepting connection:", err.Error())
+			log.Infof("Error accepting connection: %s", err.Error())
 			os.Exit(1)
 		}
-		log.Printf("Custom Redis-Server is Listening for connections on port %s\n", port)
+		log.Infof("Custom Redis-Server is Listening for connections on port %s\n", port)
 		go handleConnection(conn, &storageEngine)
 	}
 }
