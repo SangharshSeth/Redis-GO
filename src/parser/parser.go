@@ -48,6 +48,7 @@ func RESPParser(input []byte) (string, []string) {
 		return "SET", arguments
 
 	} else if commandLength == "2" {
+		
 		keyLength = InputString[14:15]
 		log.Printf("Command Length is %s\n", commandLength)
 		log.Printf("Key Length is %s\n", keyLength)

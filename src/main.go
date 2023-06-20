@@ -21,7 +21,6 @@ func handleConnection(connection net.Conn, storage *sync.Map) {
 		buffer = buffer[:n]
 		if err != nil {
 			if err == io.EOF {
-				// Reached end of file (connection closed), exit the loop
 				log.Println("Connection closed by client")
 				break
 			}
@@ -29,10 +28,10 @@ func handleConnection(connection net.Conn, storage *sync.Map) {
 			return
 		}
 
-		log.Printf("No of Bytes Read: %d\n", n)
-
+		//RESP Parser
 		command, arguments := parser.RESPParser(buffer)
 
+		//Handle Commands
 		if command == "SET" {
 			storage.Store(arguments[0], arguments[1])
 			connection.Write([]byte("+OK\r\n"))
@@ -40,32 +39,32 @@ func handleConnection(connection net.Conn, storage *sync.Map) {
 		if command == "GET" {
 			val, exists := storage.Load(arguments[0])
 			if !exists {
-				log.Printf("Here %s", val)
-				log.Printf("Value not Found for Key %s", arguments[0])
-				connection.Write([]byte("+No Key\r\n"))
+				connection.Write([]byte("+Nil\r\n"))
 			} else {
-				log.Printf("Value for Key %s is %s", arguments[0], val)
 				result := fmt.Sprintf("+%s\r\n", val)
 				resultInterMediate := strings.TrimLeft(result, "+\n")
 				result = fmt.Sprintf("+%s", resultInterMediate)
-				log.Print(len(result))
-				log.Print([]byte(result))
+
 				connection.Write([]byte(result))
 			}
 		}
-		fmt.Printf("Command %s", command)
-		fmt.Print(arguments[0])
 		connection.Write([]byte("+OK\r\n"))
 	}
 
 }
 
-func main() {
+func ExpiryService(datastore *sync.Map) {
 
+}
+
+func main() {
 	port := "6379"
 	var storageEngine sync.Map
+	var redisServerURL = fmt.Sprintf("127.0.0.1:%s", port)
 
-	redisServerURL := fmt.Sprintf("127.0.0.1:%s", port)
+	//Background Service to Handle Expiry
+	go ExpiryService(&storageEngine)
+
 	l, err := net.Listen("tcp", redisServerURL)
 
 	if err != nil {
