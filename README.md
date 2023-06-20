@@ -2,11 +2,11 @@
 A Lightweight Redis Implementation in Go with concurrency.
 
 ## Supported
-`sh
-PING
-GET
-SET
-DEL (Development Going on)
+`
+1.PING
+2.GET
+3.SET
+4.DEL (Development Going on)
 `
 
 ## RoadMap
