@@ -2,7 +2,7 @@
 A Lightweight Redis Implementation in Go with concurrency.
 
 ## Supported
-`bash
+`sh
 PING
 GET
 SET
