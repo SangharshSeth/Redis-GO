@@ -1,7 +1,16 @@
 # Redis-GO
-## Currently Supports:
-1.PING
+A Lightweight Redis Implementation in Go with concurrency.
 
-2.GET
+## Supported
+`bash
+PING
+GET
+SET
+DEL (Development Going on)
+`
 
-3.SET
+## RoadMap
+1. Hash Operations
+2. Sorting
+3. Message Broker
+

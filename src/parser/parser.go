@@ -8,14 +8,13 @@ import (
 	"strings"
 )
 
-
-func RESPParser(input []byte) (string,[]string) {
+func RESPParser(input []byte) (string, []string) {
 	InputString := string(input)
 	BytesBuffer := bytes.NewBuffer(input)
 	log.Printf("InputString Command: %q", BytesBuffer.Bytes())
 
 	var commandLength = InputString[1:2]
-	var keyLength string 
+	var keyLength string
 	var arguments []string
 	var ans []string
 
@@ -32,7 +31,6 @@ func RESPParser(input []byte) (string,[]string) {
 
 		InputString = strings.TrimLeft(InputString, trimFormat)
 		InputString = strings.TrimRight(InputString, "\r\n")
-
 
 		keyLength, _ := strconv.Atoi(keyLength)
 		log.Printf("No of Bytes of InputString %d", len(InputString))
@@ -51,15 +49,10 @@ func RESPParser(input []byte) (string,[]string) {
 
 	} else if commandLength == "2" {
 		keyLength = InputString[14:15]
-//		var valueLength int
-//		var key string
-//		var value string
-
 		log.Printf("Command Length is %s\n", commandLength)
 		log.Printf("Key Length is %s\n", keyLength)
 
 		var trimFormat = fmt.Sprintf("*2\r\n$3\r\nGET\r\n$%s\r\n", keyLength)
-
 
 		InputString = strings.TrimLeft(InputString, trimFormat)
 		InputString = strings.TrimRight(InputString, "\r\n")
