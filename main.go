@@ -9,10 +9,10 @@ import (
 	"sync"
 
 	"github.com/pieterclaerhout/go-log"
-	"github.com/sangharshseth/parser"
+	"github.com/sangharshseth/internal"
 )
 
-func handleConnection(connection net.Conn, storage *sync.Map) {
+func HandleConnection(connection net.Conn, storage *sync.Map) {
 
 	defer connection.Close()
 	var buffer = make([]byte, 128)
@@ -28,7 +28,6 @@ func handleConnection(connection net.Conn, storage *sync.Map) {
 			return
 		}
 
-		//RESP Parser
 		command, arguments := parser.RESPParser(buffer)
 
 		//Handle Commands
@@ -88,6 +87,6 @@ func main() {
 			os.Exit(1)
 		}
 		log.Infof("Custom Redis-Server is Listening for connections on port %d\n", port)
-		go handleConnection(conn, &storageEngine)
+		go HandleConnection(conn, &storageEngine)
 	}
 }
