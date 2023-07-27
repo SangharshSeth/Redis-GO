@@ -1,69 +1,63 @@
-package parser
+package internal
 
 import (
 	"bytes"
-	"strconv"
-	"strings"
-	"fmt"
-
-
 	"github.com/pieterclaerhout/go-log"
+	"strconv"
 )
 
-func RESPParser(input []byte) (string, []string) {
-	InputString := string(input)
-	BytesBuffer := bytes.NewBuffer(input)
-	log.Infof("InputString Command: %q", BytesBuffer.Bytes())
+func RESPParser(input []byte) []string {
+	inputStringBufferBytes := bytes.NewBuffer(input)
 
-	var commandLength = InputString[1:2]
-	var keyLength string
-	var arguments []string
-	var ans []string
+	var (
+		bulkArraySize  int
+		parsedCommands []string
+		clientLen      int
+		tempString     string
+		noDigits       int
+	)
 
-	if commandLength == "3" {
-		keyLength = InputString[14:15]
-		var valueLength int
-		var key string
-		var value string
-
-		log.Infof("Command Length is %s\n", commandLength)
-		log.Infof("Key Length is %s\n", keyLength)
-
-		var trimFormat = fmt.Sprintf("*3\r\n$%s\r\nSET\r\n$%s\r\n", commandLength, keyLength)
-
-		InputString = strings.TrimLeft(InputString, trimFormat)
-		InputString = strings.TrimRight(InputString, "\r\n")
-
-		keyLength, _ := strconv.Atoi(keyLength)
-		log.Infof("No of Bytes of InputString %d", len(InputString))
-
-		key = InputString[:keyLength]
-		valueLength = keyLength + 6
-		value = InputString[valueLength:]
-
-		arguments = append(arguments, key)
-		arguments = append(arguments, value)
-
-		log.Infof("InputString is %s", InputString)
-		log.Infof("Key is %s", key)
-		log.Infof("Value is %s", value)
-		return "SET", arguments
-
-	} else if commandLength == "2" {
-		
-		keyLength = InputString[14:15]
-		log.Infof("Command Length is %s\n", commandLength)
-		log.Infof("Key Length is %s\n", keyLength)
-
-		var trimFormat = fmt.Sprintf("*2\r\n$3\r\nGET\r\n$%s\r\n", keyLength)
-
-		InputString = strings.TrimLeft(InputString, trimFormat)
-		InputString = strings.TrimRight(InputString, "\r\n")
-
-		var ans []string
-		ans = append(ans, InputString)
-		return "GET", ans
+	var commandPrintable string
+	for _, item := range inputStringBufferBytes.Bytes() {
+		if item == 13 {
+			continue
+		} else if item == 10 {
+			commandPrintable += "*"
+			continue
+		} else {
+			commandPrintable += string(item)
+		}
 	}
-	return "PING", ans
 
+	log.Infof("Printable Command is %s", commandPrintable)
+
+	//var commandLength = inputString[1:2]
+	bulkArraySize, _ = strconv.Atoi(commandPrintable[1:2])
+
+	log.Info(bulkArraySize) //this is for assertion
+
+	for i := 0; i < len(commandPrintable); i++ {
+		if commandPrintable[i] == '$' {
+			var clientLength string
+
+			for j := i + 1; j < len(commandPrintable); j++ {
+				if string(commandPrintable[j]) == "*" {
+					break
+				}
+				clientLength += string(commandPrintable[j])
+			}
+
+			clientLen, _ = strconv.Atoi(clientLength)
+			noDigits = len(strconv.Itoa(clientLen))
+
+			tempString = commandPrintable[i+noDigits+2 : i+noDigits+2+clientLen]
+			parsedCommands = append(parsedCommands, tempString)
+
+		}
+	}
+
+	//log.Info("Parsed Commands Are Written Below.")
+	log.Info(parsedCommands)
+
+	return parsedCommands
 }

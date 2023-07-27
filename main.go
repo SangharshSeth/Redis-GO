@@ -1,16 +1,26 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"github.com/sangharshseth/internal"
 	"io"
 	"net"
 	"os"
-	"strings"
 	"sync"
 
 	"github.com/pieterclaerhout/go-log"
-	"github.com/sangharshseth/internal"
 )
+
+var BasicOps = map[string]bool{
+	"SET":    true,
+	"GET":    true,
+	"DEL":    true,
+	"EXPIRY": true,
+	"INCR":   true,
+	"DECR":   true,
+	"TTL":    true,
+}
 
 func HandleConnection(connection net.Conn, storage *sync.Map) {
 
@@ -28,26 +38,15 @@ func HandleConnection(connection net.Conn, storage *sync.Map) {
 			return
 		}
 
-		command, arguments := parser.RESPParser(buffer)
+		buffer = bytes.TrimSpace(buffer)
+		command := internal.RESPParser(buffer)
 
-		//Handle Commands
-		if command == "SET" {
-			storage.Store(arguments[0], arguments[1])
-			connection.Write([]byte("+OK\r\n"))
+		if BasicOps[command[0]] {
+			log.Info("Basic Operation")
+			internal.HandleBasicOps(command, storage, connection)
 		}
-		if command == "GET" {
-			val, exists := storage.Load(arguments[0])
-			if !exists {
-				connection.Write([]byte("+Nil\r\n"))
-			} else {
-				result := fmt.Sprintf("+%s\r\n", val)
-				resultInterMediate := strings.TrimLeft(result, "+\n")
-				result = fmt.Sprintf("+%s", resultInterMediate)
 
-				connection.Write([]byte(result))
-			}
-		}
-		connection.Write([]byte("+OK\r\n"))
+		//connection.Write([]byte("+OK\r\n"))
 	}
 
 }
